@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Through love</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+</head>
+<body>
+    <div class="main-container">
+        <div class="inner-frame">
+
+            <div class="left-sidebar">
+                <div class="header-text">
+                    <h1 class="blog-name">La Via Lactea</h1>
+                    <p class="status-text" onclick="toggleProfile()">from 2024~</p>
+                </div>
+                <div id="profile-section" class="profile-box collapsed">
+                    <div class="gray-rect profile-img">
+                      <img src="img/profile.webp" alt="프로필">
+                    </div>
+                </div>
+                <div class="menu-box">
+                    <div class="emoji-row">
+                        <span class="emoji" onclick="toggleMenu(0)">🫂</span>
+                        <span class="emoji" onclick="toggleMenu(1)">🎥</span>
+                        <span class="emoji" onclick="toggleMenu(2)">🏠</span>
+                    </div>
+                    <div class="menu-list-container">
+                        <div id="list-0" class="list-item">
+                            <p><a href="index.html">home</a></p>
+                            <p><a href="notice.html">notice</a></p>
+                        </div>
+                        <div id="list-1" class="list-item">
+                            <p><a href="list.html">list</a></p>
+                            <p><a href="gallery.html">gallery</a></p>
+                        </div>
+                        <div id="list-2" class="list-item">
+                            <p>ing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-content">
+                <div class="board-container">
+                    <div class="board-header">list</div>
+
+                    <div class="post-list" id="pagination-list">
+                        </div>
+
+                    <div class="pagination">
+                        <span class="btn" id="prev-btn">&lt;</span>
+                        <span id="page-num">1 / 1</span>
+                        <span class="btn" id="next-btn">&gt;</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        async function loadListPosts() {
+            const listContainer = document.getElementById('pagination-list');
+            if (!listContainer) return;
+
+            try {
+                // 파이어베이스에서 type이 'list'인 글만 조율해서 가져오기
+                const q = query(collection(db, "posts"), where("type", "==", "list"));
+                const querySnapshot = await getDocs(q);
+
+                listContainer.innerHTML = ""; // 기존 테스트 글 비우기
+
+                if (querySnapshot.empty) {
+                    listContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px;'>작성된 게시글이 없습니다.</p>";
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const postHTML = `
+                        <a href="post.html?id=${doc.id}" class="post-item">
+                            <span class="post-title">${data.title}</span>
+                            <span class="post-date">${data.date}</span>
+                        </a>
+                    `;
+                    listContainer.innerHTML += postHTML;
+                });
+
+            } catch (error) {
+                console.error("데이터 불러오기 에러:", error);
+            }
+        }
+
+        // 웹페이지 로딩이 완료되면 파이어베이스 서버에서 글 가져오기 가동
+        window.addEventListener("DOMContentLoaded", loadListPosts);
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글 작성 페이지</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background-color: #fafafa; color: #333; }
+        .form-container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #ddd; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: bold; }
+        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; }
+        textarea { resize: vertical; }
+        button { background: black; color: white; border: none; padding: 12px 20px; cursor: pointer; width: 100%; font-size: 13px; }
+        button:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>새 글 쓰기</h2>
+    <form id="postForm">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" required placeholder="제목을 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="type">타입 선택</label>
+            <select id="type">
+                <option value="list">list (일반 글)</option>
+                <option value="gallery">gallery (사진 글)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="content">본문 내용</label>
+            <textarea id="content" rows="10" required placeholder="본문 내용을 입력하세요"></textarea>
+        </div>
+        <button type="submit">딸깍 (업로드)</button>
+    </form>
+</div>
+
+<script type="module">
+    import { db } from "./firebase-config.js";
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('title').value;
+        const type = document.getElementById('type').value;
+        const content = document.getElementById('content').value;
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+
+        try {
+            await addDoc(collection(db, "posts"), {
+                title: title,
+                type: type,
+                content: content,
+                date: dateStr
+            });
+
+            alert("성공적으로 업로드되었습니다! (딸깍 완료)");
+            document.getElementById('postForm').reset();
+        } catch (error) {
+            console.error("업로드 에러:", error);
+            alert("업로드 실패했습니다.");
+        }
+    });
+</script>
+</body>
+</html>

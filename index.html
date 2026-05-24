@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Through love</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+</head>
+<body>
+    <div class="main-container">
+        <div class="inner-frame">
+
+            <div class="left-sidebar">
+                <div class="header-text">
+                    <h1 class="blog-name">La Via Lactea</h1>
+                    <p class="status-text" onclick="toggleProfile()">from 2024~</p>
+                </div>
+
+                <div id="profile-section" class="profile-box collapsed">
+                    <div class="gray-rect profile-img">
+                      <img src="img/profile.webp" alt="프로필">
+                    </div>
+                </div>
+
+                <div class="menu-box">
+                    <div class="emoji-row">
+                        <span class="emoji" onclick="toggleMenu(0)">🫂</span>
+                        <span class="emoji" onclick="toggleMenu(1)">🎥</span>
+                        <span class="emoji" onclick="toggleMenu(2)">🏠</span>
+                    </div>
+
+                    <div class="menu-list-container">
+                        <div id="list-0" class="list-item">
+                            <p><a href="index.html">home</a></p>
+                            <p><a href="notice.html">notice</a></p>
+                        </div>
+                        <div id="list-1" class="list-item">
+                            <p><a href="list.html">list</a></p>
+                            <p><a href="gallery.html">gallery</a></p>
+                        </div>
+                        <div id="list-2" class="list-item">
+                            <p>ing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-content">
+                <div class="gray-rect main-display">
+                  <img src="img/main.JPG" alt="메인디스플레이">
+                </div>
+                <a href="banner.html" class="bottom-banner">
+                    <div class="gray-rect banner-rect">
+                      <img src="img/banner.png" alt="하단배너">
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Through love</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+</head>
+<body>
+    <div class="main-container">
+        <div class="inner-frame">
+
+            <div class="left-sidebar">
+                <div class="header-text">
+                    <h1 class="blog-name">La Via Lactea</h1>
+                    <p class="status-text" onclick="toggleProfile()">from 2024~</p>
+                </div>
+                <div id="profile-section" class="profile-box collapsed">
+                    <div class="gray-rect profile-img">
+                      <img src="img/profile.webp" alt="프로필">
+                    </div>
+                </div>
+                <div class="menu-box">
+                    <div class="emoji-row">
+                        <span class="emoji" onclick="toggleMenu(0)">🫂</span>
+                        <span class="emoji" onclick="toggleMenu(1)">🎥</span>
+                        <span class="emoji" onclick="toggleMenu(2)">🏠</span>
+                    </div>
+                    <div class="menu-list-container">
+                        <div id="list-0" class="list-item">
+                          <p><a href="index.html">home</a></p>
+                          <p><a href="notice.html">notice</a></p>
+                        </div>
+                        <div id="list-1" class="list-item">
+                          <p><a href="list.html">list</a></p>
+                          <p><a href="gallery.html">gallery</a></p>
+                        </div>
+                        <div id="list-2" class="list-item">
+                            <p>ing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-content">
+                <div class="board-container post-scroll-container">
+                    <div class="post-detail-header">
+                        <h2 class="post-detail-title" id="post-title">불러오는 중...</h2>
+                        <p class="post-detail-meta" id="post-meta"></p>
+                    </div>
+
+                    <div class="post-detail-body">
+                        <p id="post-content"></p>
+
+                        <div class="bottom-bars" id="post-images">
+                          <div class="dark-gray-bar"><img src="img/gall1.png" alt="사진1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script> <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // ⚠️ 여기에 본인의 파이어베이스 설정을 붙여넣으세요
+        const firebaseConfig = {
+          apiKey: "AIzaSyCUTHfXL4S5BL8AhKB_PZcNGhQqZFU74rw",
+          authDomain: "my-home-86c46.firebaseapp.com",
+          projectId: "my-home-86c46",
+          storageBucket: "my-home-86c46.firebasestorage.app",
+          messagingSenderId: "291756289238",
+          appId: "1:291756289238:web:ecb3c3ccc8066dd91a2d77",
+          measurementId: "G-4J44LK94E0"
+        };
+
+        async function getPostDetail() {
+            // 1. 브라우저 주소창의 파라미터에서 ?id= 값 읽어오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+
+            if (!postId) {
+                alert("잘못된 접근입니다.");
+                location.href = "list.html";
+                return;
+            }
+
+            try {
+                // 2. 고유 ID를 가지고 단일 문서 타겟팅해서 가져오기
+                const docRef = doc(db, "posts", postId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    // 3. HTML 태그에 데이터 바인딩해서 화면에 보여주기
+                    document.getElementById('post-title').innerText = data.title;
+                    document.getElementById('post-meta').innerText = `${data.type} / ${data.date}`;
+
+                    // 본문 개행문자(\n) 처리하여 줄바꿈 적용
+                    document.getElementById('post-content').innerHTML = data.content.replace(/\n/g, '<br>');
+
+                    // 만약 일반 list 타입 글이면 굳이 하단에 대형 갤러리 이미지가 필요 없으므로 숨김 처리
+                    if(data.type === 'list') {
+                        document.getElementById('post-images').style.display = 'none';
+                    } else {
+                        document.getElementById('post-images').style.display = 'flex';
+                    }
+
+                } else {
+                    document.getElementById('post-title').innerText = "삭제되거나 존재하지 않는 게시글입니다.";
+                }
+            } catch (error) {
+                console.error("데이터 로드 중 에러 발생:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", getPostDetail);
+    </script>
+</body>
+</html>

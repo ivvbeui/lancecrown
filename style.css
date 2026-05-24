@@ -1,0 +1,238 @@
+/* 1. 기본 스타일 및 레이아웃 공통 */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: white;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.inner-frame {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+/* 이미지 및 박스 공통 */
+.gray-rect { background-color: #white; overflow: hidden; }
+.gray-rect img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 2. 왼쪽 사이드바 */
+.left-sidebar {
+    width: 180px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.blog-name { font-size: 15px; font-weight: bold; margin: 0 0 5px 0; }
+.status-text { font-size: 12px; color: #999; margin: 0 0 15px 0; cursor: pointer; }
+
+/* 프로필 박스 - PC에서는 항상 표시됨 */
+.profile-box {
+    position: relative; /* PC에서는 아래 메뉴를 밀어내도록 설정 */
+    width: 180px;
+    height: 220px;
+    background: white;
+    z-index: 10;
+    transition: all 0.3s ease;
+    margin-bottom: 50px;
+
+    /* HTML에 collapsed가 있어도 PC에선 강제로 보이게 함 */
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+}
+
+/* 메뉴 박스 */
+.menu-box {
+    margin-top: 0;
+    margin-bottom: 20px;/* 사진이 공간을 차지하므로 마진 제거 */
+    width: 180px;
+    position: relative;
+}
+
+.emoji-row { display: flex; justify-content: space-around; margin-top: 10; margin-bottom: 20px; }
+.emoji { font-size: 13px; cursor: pointer; }
+
+.menu-list-container {
+    position: absolute;
+    width: 100%;
+    top: 35px;
+    left: 0;
+    z-index: 110;
+}
+
+.list-item {
+    position: absolute;
+    width: 100%;
+    background: white;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+
+.list-item.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.list-item p { font-size: 11px; margin: 10px 0; text-align: center; }
+.list-item a { text-decoration: none; color: black; }
+
+/* 3. 오른쪽 영역 및 게시판 */
+.right-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    min-height: 475px;
+}
+
+.main-display, .board-container {
+    width: 480px;
+    height: 400px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.board-header { font-size: 13px; font-weight: bold; margin-bottom: 25px; align-self: flex-start; }
+
+/* 리스트 및 갤러리 공통 */
+.post-list { display: flex; flex-direction: column; gap: 15px; flex-grow: 1; }
+.post-item { display: flex; justify-content: space-between; text-decoration: none; color: black; }
+.post-title { font-size: 13px; }
+.post-date { font-size: 11px; color: #999; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; }
+.gallery-item { aspect-ratio: 1/1; }
+
+.banner-rect { width: 180px; height: 35px; }
+.pagination { display: flex; justify-content: center; gap: 20px; font-size: 12px; color: #999; margin-top: auto; padding-top: 20px; }
+.pagination .btn { cursor: pointer; }
+
+/* 4. 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+    .inner-frame { flex-direction: column; align-items: center; gap: 20px; }
+    .left-sidebar { width: 100%; align-items: center; }
+    .header-text { text-align: center; }
+
+    /* 모바일에서는 다시 클릭해야 보이도록 설정 */
+    .profile-box {
+        position: absolute; /* 본문 위로 뜨게 설정 */
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%) !important;
+        width: 200px;
+        height: 240px;
+        margin-bottom: 0;
+
+        /* 다시 collapsed 클래스에 반응하도록 수정 */
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    /* 모바일에서 collapsed가 제거되었을 때(클릭 시)만 표시 */
+    .profile-box:not(.collapsed) {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateX(-50%) translateY(0) !important;
+    }
+
+    .menu-box { margin-top: 0; padding-top: 10px; margin-bottom: 20px; }
+    .menu-list-container { width: 150px; left: 50%; transform: translateX(-50%); top: 45px; }
+
+    .main-display, .board-container { width: 320px; height: auto; min-height: 300px; }
+    .gallery-grid { gap: 5px; }
+}
+
+/* --- Post Page 전용 스타일 추가 --- */
+
+/* 본문 컨테이너에 스크롤 적용 */
+.post-scroll-container {
+    overflow-y: auto; /* 내부 스크롤 활성화 */
+    padding-right: 15px; /* 스크롤바와 텍스트 간격 */
+}
+
+/* 스크롤바 커스텀 (깔끔한 디자인을 위해) */
+/* 본문 컨테이너 설정 */
+.post-scroll-container {
+    overflow-y: auto;           /* 스크롤 기능은 유지 */
+
+    /* 1. IE 및 Edge용 */
+    -ms-overflow-style: none;
+
+    /* 2. Firefox용 */
+    scrollbar-width: none;
+}
+
+/* 3. Chrome, Safari, Opera, Edge(Chromium)용 */
+.post-scroll-container::-webkit-scrollbar {
+    display: none;              /* 스크롤바 영역을 아예 숨김 */
+}
+
+.post-detail-header {
+    margin-bottom: 30px;
+}
+
+.post-detail-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.post-detail-meta {
+    font-size: 11px;
+    color: #999;
+    margin: 5px 0 0 0;
+}
+
+.post-detail-body {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #333;
+    text-align: justify;
+}
+
+/* 하단 회색 바 스타일 */
+.bottom-bars {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 20px; /* 하단 여백 */
+}
+
+.dark-gray-bar {
+    width: 70%;        /* 본문 너비에 꽉 차게 설정 */
+    height: auto;       /* 사진 높이에 따라 자동으로 늘어남 */
+    background-color: transparent; /* 배경색 제거 (사진이 들어갈 것이므로) */
+    margin-bottom: 10px; /* 사진 사이의 간격 */
+}
+
+.dark-gray-bar img {
+    width: 100%;        /* 부모 박스 너비에 맞춤 */
+    height: auto;       /* 비율 유지 */
+    display: block;     /* 하단 미세 공백 제거 */
+    border-radius: 2px; /* 본문 분위기에 맞춰 살짝 굴림 (선택 사항) */
+}
