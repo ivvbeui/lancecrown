@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Through love</title>
+    <title>Through love - Notice</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 </head>
@@ -44,16 +44,14 @@
             </div>
 
             <div class="right-content">
-                <div class="board-container">
-                    <div class="board-header">list</div>
+                <div class="board-container notice-scroll-container">
+                    <div class="post-detail-header">
+                        <h2 class="post-detail-title" id="notice-title">공지사항을 불러오는 중...</h2>
+                        <p class="post-detail-meta" id="notice-meta"></p>
+                    </div>
 
-                    <div class="post-list" id="pagination-list">
-                        </div>
-
-                    <div class="pagination">
-                        <span class="btn" id="prev-btn">&lt;</span>
-                        <span id="page-num">1 / 1</span>
-                        <span class="btn" id="next-btn">&gt;</span>
+                    <div class="post-detail-body">
+                        <p id="notice-content"></p>
                     </div>
                 </div>
             </div>
@@ -65,77 +63,43 @@
 
     <script type="module">
         import { db } from "./firebase-config.js";
-        import { collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        // 🚨 최신글 1개만 제한해서 가져오기 위해 limit를 추가로 임포트합니다.
+        import { collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        let allPosts = [];
-        let currentPage = 1;
-        const postsPerPage = 6;
-
-        async function loadNoticePosts() {
-            const listContainer = document.getElementById('pagination-list');
-            if (!listContainer) return;
-
+        async function loadLatestNotice() {
             try {
-                // notice 타입을 최신순 정렬하여 쿼리
+                // 🚨 핵심: type이 notice인 글 중, timestamp 기준 가장 최신글 딱 '1개'만 가져옴
                 const q = query(
                     collection(db, "posts"),
                     where("type", "==", "notice"),
-                    orderBy("timestamp", "desc")
+                    orderBy("timestamp", "desc"),
+                    limit(1)
                 );
 
                 const querySnapshot = await getDocs(q);
-                allPosts = [];
 
-                querySnapshot.forEach((doc) => {
-                    allPosts.push({ id: doc.id, ...doc.data() });
-                });
+                if (querySnapshot.empty) {
+                    document.getElementById('notice-title').innerText = "등록된 공지사항이 없습니다.";
+                    return;
+                }
 
-                renderPage();
+                // 첫 번째 문서 데이터 추출
+                const docSnap = querySnapshot.docs[0];
+                const data = docSnap.data();
+
+                // 화면에 바로 뿌려주기
+                document.getElementById('notice-title').innerText = `[공지] ${data.title}`;
+                document.getElementById('notice-meta').innerText = data.date;
+                // 줄바꿈 처리
+                document.getElementById('notice-content').innerHTML = data.content.replace(/\n/g, '<br>');
+
             } catch (error) {
                 console.error("공지사항 로딩 에러:", error);
+                document.getElementById('notice-title').innerText = "공지사항을 불러오지 못했습니다.";
             }
         }
 
-        function renderPage() {
-            const listContainer = document.getElementById('pagination-list');
-            listContainer.innerHTML = "";
-
-            if (allPosts.length === 0) {
-                listContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px;'>작성된 공지사항이 없습니다.</p>";
-                updatePaginationUI();
-                return;
-            }
-
-            const startIndex = (currentPage - 1) * postsPerPage;
-            const endIndex = Math.min(startIndex + postsPerPage, allPosts.length);
-
-            for (let i = startIndex; i < endIndex; i++) {
-                const data = allPosts[i];
-                const postHTML = `
-                    <a href="post.html?id=${data.id}" class="post-item">
-                        <span class="post-title">[공지] ${data.title}</span>
-                        <span class="post-date">${data.date}</span>
-                    </a>
-                `;
-                listContainer.innerHTML += postHTML;
-            }
-            updatePaginationUI();
-        }
-
-        function updatePaginationUI() {
-            const totalPages = Math.max(1, Math.ceil(allPosts.length / postsPerPage));
-            document.getElementById('page-num').innerText = `${currentPage} / ${totalPages}`;
-        }
-
-        document.getElementById('prev-btn').addEventListener('click', () => {
-            if (currentPage > 1) { currentPage--; renderPage(); }
-        });
-        document.getElementById('next-btn').addEventListener('click', () => {
-            const totalPages = Math.ceil(allPosts.length / postsPerPage);
-            if (currentPage < totalPages) { currentPage++; renderPage(); }
-        });
-
-        window.addEventListener("DOMContentLoaded", loadNoticePosts);
+        window.addEventListener("DOMContentLoaded", loadLatestNotice);
     </script>
 </body>
 </html>
