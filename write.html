@@ -81,38 +81,38 @@
         // 🚨 정렬 복구를 위해 정밀한 타임스탬프(밀리초)를 저장용으로 생성
         const timestamp = now.getTime();
 
-        try {
-            let imageUrl = "";
+// 🚨 write.html의 try { ... } 내부 코드를 이 버전으로 잠시 덮어씌우세요!
+try {
+    let imageUrl = "";
 
-            // 1. 갤러리 타입이고 이미지 파일이 존재할 때 Storage에 먼저 업로드
-            if (type === 'gallery' && imageFile) {
-                // 파일 이름이 겹치지 않도록 타임스탬프를 붙여 저장 경로 설정 (예: gallery/1716600000000_photo.jpg)
-                const storageRef = ref(storage, `gallery/${timestamp}_${imageFile.name}`);
+    if (type === 'gallery' && imageFile) {
+        const storageRef = ref(storage, `gallery/${timestamp}_${imageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(snapshot.ref);
+    }
 
-                // 파일 업로드 실행
-                const snapshot = await uploadBytes(storageRef, imageFile);
-                // 업로드된 파일의 다운로드 가능한 URL 받아오기
-                imageUrl = await getDownloadURL(snapshot.ref);
-            }
-
-            // 2. Firestore에 게시글 데이터 저장 (imageUrl 포함)
-            await addDoc(collection(db, "posts"), {
-                title: title,
-                type: type,
-                content: content,
-                date: dateStr,
-                timestamp: now.getTime() // 나중에 정렬(orderBy)할 때 요긴하게 쓰임!
-                imageUrl: imageUrl     // 이미지 URL 저장 (일반 글이나 공지는 빈 문자열)
-            });
-
-            alert("🎉 성공적으로 업로드되었습니다!");
-            document.getElementById('postForm').reset();
-            imageGroup.style.display = 'none'; // 인풋창 다시 숨김
-        } catch (error) {
-            console.error("진짜 에러 내용:", error);
-            alert("에러 내용: " + error.message);
-        }
+    // 🌟 [핵심 치트키] 무조건 posts 폴더와 첫 글을 강제로 쑤셔 넣는 명령어입니다.
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    
+    // 무조건 'posts' 폴더 안에 'force_start'라는 강제 문서를 생성해 버림
+    await setDoc(doc(db, "posts", "force_start"), {
+        title: title,
+        type: type,
+        content: content,
+        date: dateStr,
+        timestamp: now.getTime(),
+        imageUrl: imageUrl
     });
+
+    alert("🎉 [강제 성공] 데이터베이스가 정상 복구되었습니다!");
+    document.getElementById('postForm').reset();
+    imageGroup.style.display = 'none';
+
+} catch (error) {
+    // 🚨 만약 여기서도 에러가 나면 개발자 도구(F12) 콘솔 창에 찍힌 에러를 팝업으로 띄우게 만듦
+    alert("에러 발생: " + error.message);
+    console.error(error);
+}
 </script>
 </body>
 </html>
