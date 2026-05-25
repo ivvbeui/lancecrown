@@ -236,3 +236,13 @@ body {
     display: block;     /* 하단 미세 공백 제거 */
     border-radius: 2px; /* 본문 분위기에 맞춰 살짝 굴림 (선택 사항) */
 }
+/* --- Notice 페이지 본문 스크롤 및 레이아웃 설정 --- */
+.notice-scroll-container {
+    overflow-y: auto;
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none;    /* Firefox */
+}
+
+.notice-scroll-container::-webkit-scrollbar {
+    display: none;            /* Chrome, Safari, Opera */
+}
