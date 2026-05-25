@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Through love - Gallery</title>
+    <title>Through love</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 </head>
@@ -45,9 +45,9 @@
 
             <div class="right-content">
                 <div class="board-container">
-                    <div class="board-header">gallery</div>
+                    <div class="board-header">list</div>
 
-                    <div class="gallery-grid" id="gallery-container">
+                    <div class="post-list" id="pagination-list">
                         </div>
 
                     <div class="pagination">
@@ -62,23 +62,24 @@
     </div>
 
     <script src="script.js"></script>
+
     <script type="module">
         import { db } from "./firebase-config.js";
         import { collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         let allPosts = [];
         let currentPage = 1;
-        const postsPerPage = 6; // 갤러리 사진도 한 페이지에 6개씩 배치!
+        const postsPerPage = 6;
 
-        async function loadGalleryPosts() {
-            const galleryContainer = document.getElementById('gallery-container');
-            if (!galleryContainer) return;
+        async function loadNoticePosts() {
+            const listContainer = document.getElementById('pagination-list');
+            if (!listContainer) return;
 
             try {
-                // gallery 타입을 최신순 정렬하여 쿼리
+                // notice 타입을 최신순 정렬하여 쿼리
                 const q = query(
                     collection(db, "posts"),
-                    where("type", "==", "gallery"),
+                    where("type", "==", "notice"),
                     orderBy("timestamp", "desc")
                 );
 
@@ -91,16 +92,16 @@
 
                 renderPage();
             } catch (error) {
-                console.error("갤러리 로딩 에러:", error);
+                console.error("공지사항 로딩 에러:", error);
             }
         }
 
         function renderPage() {
-            const galleryContainer = document.getElementById('gallery-container');
-            galleryContainer.innerHTML = "";
+            const listContainer = document.getElementById('pagination-list');
+            listContainer.innerHTML = "";
 
             if (allPosts.length === 0) {
-                galleryContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px; grid-column: span 3;'>등록된 사진이 없습니다.</p>";
+                listContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px;'>작성된 공지사항이 없습니다.</p>";
                 updatePaginationUI();
                 return;
             }
@@ -110,14 +111,13 @@
 
             for (let i = startIndex; i < endIndex; i++) {
                 const data = allPosts[i];
-                const displayImg = data.imageUrl ? data.imageUrl : "img/gall1.png";
-
                 const postHTML = `
-                    <a href="post.html?id=${data.id}" class="gallery-item gray-rect">
-                        <img src="${displayImg}" alt="${data.title}">
+                    <a href="post.html?id=${data.id}" class="post-item">
+                        <span class="post-title">[공지] ${data.title}</span>
+                        <span class="post-date">${data.date}</span>
                     </a>
                 `;
-                galleryContainer.innerHTML += postHTML;
+                listContainer.innerHTML += postHTML;
             }
             updatePaginationUI();
         }
@@ -135,7 +135,7 @@
             if (currentPage < totalPages) { currentPage++; renderPage(); }
         });
 
-        window.addEventListener("DOMContentLoaded", loadGalleryPosts);
+        window.addEventListener("DOMContentLoaded", loadNoticePosts);
     </script>
 </body>
 </html>

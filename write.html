@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글 작성 페이지</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background-color: #fafafa; color: #333; }
+        .form-container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #ddd; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: bold; }
+        input[type="text"], select, textarea, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; }
+        textarea { resize: vertical; }
+        button { background: black; color: white; border: none; padding: 12px 20px; cursor: pointer; width: 100%; font-size: 13px; }
+        button:hover { opacity: 0.8; }
+        /* 초기에는 이미지 입력창을 숨김 */
+        #image-group { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>새 글 쓰기</h2>
+    <form id="postForm">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" required placeholder="제목을 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="type">타입 선택</label>
+            <select id="type">
+                <option value="list">list (일반 글)</option>
+                <option value="gallery">gallery (사진 글)</option>
+                <option value="notice">notice (공지사항)</option> </select>
+        </div>
+        <div class="form-group" id="image-group">
+            <label for="image">이미지 첨부 (Gallery 전용)</label>
+            <input type="file" id="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="content">본문 내용</label>
+            <textarea id="content" rows="10" required placeholder="본문 내용을 입력하세요"></textarea>
+        </div>
+        <button type="submit">업로드</button>
+    </form>
+</div>
+
+<script type="module">
+    // 아까 수정한 firebase-config에서 db와 storage를 불러옴
+    import { db, storage } from "./firebase-config.js";
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const typeSelect = document.getElementById('type');
+    const imageGroup = document.getElementById('image-group');
+    const imageInput = document.getElementById('image');
+
+    // 타입이 gallery일 때만 이미지 업로드 창이 보이도록 설정
+    typeSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'gallery') {
+            imageGroup.style.display = 'block';
+            imageInput.required = true; // 갤러리라면 이미지 필수
+        } else {
+            imageGroup.style.display = 'none';
+            imageInput.required = false;
+            imageInput.value = ""; // 선택했던 파일 초기화
+        }
+    });
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('title').value;
+        const type = document.getElementById('type').value;
+        const content = document.getElementById('content').value;
+        const imageFile = imageInput.files[0];
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+
+        // 🚨 정렬 복구를 위해 정밀한 타임스탬프(밀리초)를 저장용으로 생성
+        const timestamp = now.getTime();
+
+        try {
+            let imageUrl = "";
+
+            // 1. 갤러리 타입이고 이미지 파일이 존재할 때 Storage에 먼저 업로드
+            if (type === 'gallery' && imageFile) {
+                // 파일 이름이 겹치지 않도록 타임스탬프를 붙여 저장 경로 설정 (예: gallery/1716600000000_photo.jpg)
+                const storageRef = ref(storage, `gallery/${timestamp}_${imageFile.name}`);
+
+                // 파일 업로드 실행
+                const snapshot = await uploadBytes(storageRef, imageFile);
+                // 업로드된 파일의 다운로드 가능한 URL 받아오기
+                imageUrl = await getDownloadURL(snapshot.ref);
+            }
+
+            // 2. Firestore에 게시글 데이터 저장 (imageUrl 포함)
+            await addDoc(collection(db, "posts"), {
+                title: title,
+                type: type,
+                content: content,
+                date: dateStr,
+                timestamp: now.getTime() // 나중에 정렬(orderBy)할 때 요긴하게 쓰임!
+                imageUrl: imageUrl     // 이미지 URL 저장 (일반 글이나 공지는 빈 문자열)
+            });
+
+            alert("🎉 성공적으로 업로드되었습니다!");
+            document.getElementById('postForm').reset();
+            imageGroup.style.display = 'none'; // 인풋창 다시 숨김
+        } catch (error) {
+            console.error("진짜 에러 내용:", error);
+            alert("에러 내용: " + error.message);
+        }
+    });
+</script>
+</body>
+</html>

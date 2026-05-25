@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Through love - Gallery</title>
+    <title>Through love</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 </head>
@@ -45,9 +45,9 @@
 
             <div class="right-content">
                 <div class="board-container">
-                    <div class="board-header">gallery</div>
+                    <div class="board-header">list</div>
 
-                    <div class="gallery-grid" id="gallery-container">
+                    <div class="post-list" id="pagination-list">
                         </div>
 
                     <div class="pagination">
@@ -66,59 +66,66 @@
         import { db } from "./firebase-config.js";
         import { collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        let allPosts = [];
-        let currentPage = 1;
-        const postsPerPage = 6; // 갤러리 사진도 한 페이지에 6개씩 배치!
+        let allPosts = [];     // 서버에서 가져온 해당 타입의 전체 글 저장용
+        let currentPage = 1;   // 현재 페이지 번호
+        const postsPerPage = 6; // 6개 이상이 되면 다음 페이지로!
 
-        async function loadGalleryPosts() {
-            const galleryContainer = document.getElementById('gallery-container');
-            if (!galleryContainer) return;
+        async function loadListPosts() {
+            const listContainer = document.getElementById('pagination-list');
+            if (!listContainer) return;
 
             try {
-                // gallery 타입을 최신순 정렬하여 쿼리
+                // 🚨 핵심: type이 'list'인 글들을 timestamp 기준 내림차순(최신순)으로 정렬해서 쿼리
                 const q = query(
                     collection(db, "posts"),
-                    where("type", "==", "gallery"),
+                    where("type", "==", "list"),
                     orderBy("timestamp", "desc")
                 );
 
                 const querySnapshot = await getDocs(q);
-                allPosts = [];
+                allPosts = []; // 배열 초기화
 
                 querySnapshot.forEach((doc) => {
                     allPosts.push({ id: doc.id, ...doc.data() });
                 });
 
+                // 데이터를 다 가져왔으면 첫 페이지 렌더링 시작
                 renderPage();
+
             } catch (error) {
-                console.error("갤러리 로딩 에러:", error);
+                console.error("데이터 불러오기 에러:", error);
+                // 만약 콘솔에 'index' 관련 에러(색인 생성 필요)가 뜨면 아래 안내 확인!
             }
         }
 
+        // 현재 페이지에 맞는 글 6개만 화면에 뿌려주는 함수
         function renderPage() {
-            const galleryContainer = document.getElementById('gallery-container');
-            galleryContainer.innerHTML = "";
+            const listContainer = document.getElementById('pagination-list');
+            listContainer.innerHTML = "";
 
             if (allPosts.length === 0) {
-                galleryContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px; grid-column: span 3;'>등록된 사진이 없습니다.</p>";
+                listContainer.innerHTML = "<p style='font-size:12px; color:#999; padding:10px;'>작성된 게시글이 없습니다.</p>";
                 updatePaginationUI();
                 return;
             }
 
+            // 현재 페이지에 보여줄 글의 시작 인덱스와 끝 인덱스 계산 (예: 1페이지면 0~5번 글)
             const startIndex = (currentPage - 1) * postsPerPage;
             const endIndex = Math.min(startIndex + postsPerPage, allPosts.length);
 
+            // 6개만 쏙 잘라서 화면에 그리기
             for (let i = startIndex; i < endIndex; i++) {
                 const data = allPosts[i];
-                const displayImg = data.imageUrl ? data.imageUrl : "img/gall1.png";
-
                 const postHTML = `
-                    <a href="post.html?id=${data.id}" class="gallery-item gray-rect">
-                        <img src="${displayImg}" alt="${data.title}">
+                    <a href="post.html?id=${data.id}" class="post-item">
+                        <span class="post-title">${data.title}</span>
+                        <span class="post-date">${data.date}</span>
                     </a>
                 `;
-                galleryContainer.innerHTML += postHTML;
+                listContainer.innerHTML += postHTML;
             }
+
+            // 하단 페이지네이션 버튼 글자 및 상태 업데이트
             updatePaginationUI();
         }
 
@@ -127,15 +134,25 @@
             document.getElementById('page-num').innerText = `${currentPage} / ${totalPages}`;
         }
 
+        // ◀ 버튼 클릭 이벤트
         document.getElementById('prev-btn').addEventListener('click', () => {
-            if (currentPage > 1) { currentPage--; renderPage(); }
-        });
-        document.getElementById('next-btn').addEventListener('click', () => {
-            const totalPages = Math.ceil(allPosts.length / postsPerPage);
-            if (currentPage < totalPages) { currentPage++; renderPage(); }
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
         });
 
-        window.addEventListener("DOMContentLoaded", loadGalleryPosts);
+        // ▶ 버튼 클릭 이벤트
+        document.getElementById('next-btn').addEventListener('click', () => {
+            const totalPages = Math.ceil(allPosts.length / postsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+
+        // 페이지 로드 시 가동
+        window.addEventListener("DOMContentLoaded", loadListPosts);
     </script>
 </body>
 </html>
