@@ -13,7 +13,6 @@
         textarea { resize: vertical; }
         button { background: black; color: white; border: none; padding: 12px 20px; cursor: pointer; width: 100%; font-size: 13px; }
         button:hover { opacity: 0.8; }
-        /* 초기에는 이미지 입력창을 숨김 */
         #image-group { display: none; }
     </style>
 </head>
@@ -24,46 +23,45 @@
     <form id="postForm">
         <div class="form-group">
             <label for="title">제목</label>
-            <input type="text" id="title" required placeholder="제목을 입력하세요">
+            <input type="text" id="title" placeholder="제목을 입력하세요." required>
         </div>
         <div class="form-group">
-            <label for="type">타입 선택</label>
-            <select id="type">
-                <option value="list">list (일반 글)</option>
-                <option value="gallery">gallery (사진 글)</option>
-                <option value="notice">notice (공지사항)</option> </select>
+            <label for="type">분류</label>
+            <select id="type" required>
+                <option value="notice">notice</option>
+                <option value="list">list</option>
+                <option value="gallery">gallery</option>
+            </select>
         </div>
         <div class="form-group" id="image-group">
-            <label for="image">이미지 첨부 (Gallery 전용)</label>
-            <input type="file" id="image" accept="image/*">
+            <label for="imageFile">이미지 업로드 (Gallery 전용)</label>
+            <input type="file" id="imageFile" accept="image/*">
         </div>
         <div class="form-group">
-            <label for="content">본문 내용</label>
-            <textarea id="content" rows="10" required placeholder="본문 내용을 입력하세요"></textarea>
+            <label for="content">내용</label>
+            <textarea id="content" rows="10" placeholder="내용을 입력하세요." required></textarea>
         </div>
-        <button type="submit">업로드</button>
+        <button type="submit">작성 완료</button>
     </form>
 </div>
 
 <script type="module">
-    // 아까 수정한 firebase-config에서 db와 storage를 불러옴
     import { db, storage } from "./firebase-config.js";
     import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const typeSelect = document.getElementById('type');
     const imageGroup = document.getElementById('image-group');
-    const imageInput = document.getElementById('image');
+    const imageInput = document.getElementById('imageFile');
 
-    // 타입이 gallery일 때만 이미지 업로드 창이 보이도록 설정
-    typeSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'gallery') {
+    typeSelect.addEventListener('change', () => {
+        if (typeSelect.value === 'gallery') {
             imageGroup.style.display = 'block';
-            imageInput.required = true; // 갤러리라면 이미지 필수
+            imageInput.required = true;
         } else {
             imageGroup.style.display = 'none';
             imageInput.required = false;
-            imageInput.value = ""; // 선택했던 파일 초기화
+            imageInput.value = ""; 
         }
     });
 
@@ -77,42 +75,36 @@
 
         const now = new Date();
         const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-
-        // 🚨 정렬 복구를 위해 정밀한 타임스탬프(밀리초)를 저장용으로 생성
         const timestamp = now.getTime();
 
-// 🚨 write.html의 try { ... } 내부 코드를 이 버전으로 잠시 덮어씌우세요!
-try {
-    let imageUrl = "";
+        try {
+            let imageUrl = "";
 
-    if (type === 'gallery' && imageFile) {
-        const storageRef = ref(storage, `gallery/${timestamp}_${imageFile.name}`);
-        const snapshot = await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(snapshot.ref);
-    }
+            if (type === 'gallery' && imageFile) {
+                const storageRef = ref(storage, `gallery/${timestamp}_${imageFile.name}`);
+                const snapshot = await uploadBytes(storageRef, imageFile);
+                imageUrl = await getDownloadURL(snapshot.ref);
+            }
 
-    // 🌟 [핵심 치트키] 무조건 posts 폴더와 첫 글을 강제로 쑤셔 넣는 명령어입니다.
-    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    
-    // 무조건 'posts' 폴더 안에 'force_start'라는 강제 문서를 생성해 버림
-    await setDoc(doc(db, "posts", "force_start"), {
-        title: title,
-        type: type,
-        content: content,
-        date: dateStr,
-        timestamp: now.getTime(),
-        imageUrl: imageUrl
+            // 🚨 쉼표 오타 완벽 제거 및 정상 업로드 코드
+            await addDoc(collection(db, "posts"), {
+                title: title,
+                type: type,
+                content: content,
+                date: dateStr,
+                timestamp: timestamp, 
+                imageUrl: imageUrl     
+            });
+
+            alert("🎉 성공적으로 복구 및 업로드되었습니다!");
+            document.getElementById('postForm').reset();
+            imageGroup.style.display = 'none';
+
+        } catch (error) {
+            alert("구글 서버 에러 발생: " + error.message);
+            console.error(error);
+        }
     });
-
-    alert("🎉 [강제 성공] 데이터베이스가 정상 복구되었습니다!");
-    document.getElementById('postForm').reset();
-    imageGroup.style.display = 'none';
-
-} catch (error) {
-    // 🚨 만약 여기서도 에러가 나면 개발자 도구(F12) 콘솔 창에 찍힌 에러를 팝업으로 띄우게 만듦
-    alert("에러 발생: " + error.message);
-    console.error(error);
-}
 </script>
 </body>
 </html>
