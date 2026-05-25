@@ -88,7 +88,7 @@
                 const data = docSnap.data();
 
                 // 화면에 바로 뿌려주기
-                document.getElementById('notice-title').innerText = `[공지] ${data.title}`;
+                document.getElementById('notice-title').innerText = `${data.title}`;
                 document.getElementById('notice-meta').innerText = data.date;
                 // 줄바꿈 처리
                 document.getElementById('notice-content').innerHTML = data.content.replace(/\n/g, '<br>');
